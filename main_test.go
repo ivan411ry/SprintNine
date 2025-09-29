@@ -1,55 +1,58 @@
 package main
 
 // Пишите тесты в этом файле
-import "testing"
+import (
+	"testing"
+)
 
-func TestGenerateRandomElements_ZeroAndNegative(t *testing.T) {
-	if got := generateRandomElements(0); len(got) != 0 {
-		t.Fatalf("size=0: expected empty slice, got len=%d", len(got))
-	}
-	if got := generateRandomElements(-5); len(got) != 0 {
-		t.Fatalf("size<0: expected empty slice, got len=%d", len(got))
-	}
-}
-func TestGenerateRandomElements_SizeAndPositive(t *testing.T) {
-	const n = 1000
-	got := generateRandomElements(n)
-	if len(got) != n {
-		t.Fatalf("expected len=%d, got %d", n, len(got))
-	}
-	for i, v := range got {
-		if v <= 0 {
-			t.Fatalf("expected positive values, got %d at index %d", v, i)
+func TestGenerateRandomElements(t *testing.T) {
+	t.Run("size <= 0 -> empty slice", func(t *testing.T) {
+		for _, sz := range []int{0, -1, -10} {
+			got := generateRandomElements(sz)
+			if got == nil {
+				t.Fatalf("got nil slice for size=%d; want non-nil empty slice", sz)
+			}
+			if len(got) != 0 {
+				t.Fatalf("len(generateRandomElements(%d)) = %d; want 0", sz, len(got))
+			}
 		}
-	}
+	})
+
+	t.Run("size > 0 -> slice of exact length", func(t *testing.T) {
+		for _, sz := range []int{1, 5, 100} {
+			got := generateRandomElements(sz)
+			if got == nil {
+				t.Fatalf("got nil slice for size=%d; want non-nil", sz)
+			}
+			if len(got) != sz {
+				t.Fatalf("len(generateRandomElements(%d)) = %d; want %d", sz, len(got), sz)
+			}
+		}
+	})
 }
-func TestMaximum_Empty(t *testing.T) {
-	if max := maximum(nil); max != 0 {
-		t.Fatalf("empty slice: expected 0, got %d", max)
-	}
-	if max := maximum([]int{}); max != 0 {
-		t.Fatalf("empty slice (non-nil): expected 0, got %d", max)
-	}
-}
-func TestMaximum_Single(t *testing.T) {
-	if max := maximum([]int{42}); max != 42 {
-		t.Fatalf("single element: expected 42, got %d", max)
-	}
-}
-func TestMaximum_Many(t *testing.T) {
+
+func TestMaximum(t *testing.T) {
 	tests := []struct {
+		name string
 		in   []int
 		want int
 	}{
-		{[]int{1, 2, 3}, 3},
-		{[]int{5, 1, 2}, 5},
-		{[]int{1, 9, 3, 9, 2}, 9},
-		{[]int{7, 7, 7}, 7},
-		{[]int{1_000_000, 999_999}, 1_000_000},
+		{"empty slice", []int{}, 0},
+		{"one element", []int{5}, 5},
+		{"all equal", []int{7, 7, 7}, 7},
+		{"increasing", []int{1, 2, 3, 4}, 4},
+		{"decreasing", []int{9, 7, 5, 3}, 9},
+		{"mixed signs", []int{-10, 0, 10}, 10},
+		{"all negative", []int{-5, -2, -10}, -2},
 	}
-	for i, tc := range tests {
-		if got := maximum(tc.in); got != tc.want {
-			t.Fatalf("case %d: expected %d, got %d", i, tc.want, got)
-		}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			got := maximum(tt.in)
+			if got != tt.want {
+				t.Fatalf("maximum(%v) = %d; want %d", tt.in, got, tt.want)
+			}
+		})
 	}
 }
